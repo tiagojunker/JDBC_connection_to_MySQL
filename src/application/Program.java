@@ -1,9 +1,10 @@
 package application;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 import db.DB;
 
@@ -11,30 +12,35 @@ public class Program {
 
 	public static void main(String[] args) {
 		
-		Connection conn = null; // Connection to DataBase
-		Statement st = null;	// Object to handle with SQL commands
-		ResultSet rs = null;	// Object to receive the result of Query made by Statement
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		Connection conn = null; 		// Connection to DataBase
+		PreparedStatement st = null;	// Object to Handle with SQL commands
 		
 		try {
 			conn = DB.getConnection();
-			st = conn.createStatement();
-			rs = st.executeQuery("SELECT * FROM department");  // SQL command (SELECT)
+			st = conn.prepareStatement(
+					"INSERT INTO seller "
+					+ "(Name, Email, BirthDate, BaseSalary, DepartmentId) "
+					+ "VALUES"
+					+ "(?, ?, ?, ?, ?)");
 			
-			while(rs.next()) {
-				System.out.println(rs.getInt("Id") + ", " + rs.getString("Name"));
-			}
+			st.setString(1, "Carl Purple");			// Filling the data
+			st.setString(2, "carl@gmail.com");
+			st.setDate(3, new java.sql.Date(sdf.parse("22/04/1985").getTime()));
+			st.setDouble(4, 3000.0);
+			st.setInt(5, 4);
+			
+			int rowsAffected = st.executeUpdate();  	// Insert without id recovery
+			System.out.println("Done! Rows affected:" + rowsAffected);
 			
 		} catch(SQLException e) {
 			e.printStackTrace();
-			
+		} catch(ParseException e) {
+			e.printStackTrace();
 		} finally {
-			// Closing connections
-			DB.closeResultSet(rs);
 			DB.closeStatement(st);
 			DB.closeCOnnection();
-		}	
-		
-		
+		}
 	}
 
 }
